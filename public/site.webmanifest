@@ -1,0 +1,14 @@
+{
+  "name": "Sidhil Sivadas Portfolio",
+  "short_name": "Sidhil",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "theme_color": "#171717",
+  "background_color": "#171717",
+  "display": "standalone"
+}

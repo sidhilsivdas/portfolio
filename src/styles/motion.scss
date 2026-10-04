@@ -1,0 +1,476 @@
+/* ==========================================================================
+   Motion system
+   Every animation here touches only `transform` / `opacity` (compositor-only),
+   so nothing triggers layout or paint per frame. The two exceptions are the
+   one-off counter transition and hover fades on pseudo-elements.
+   ========================================================================== */
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --accent: #f97316;
+  --accent-light: #fb923c;
+}
+
+html {
+  scroll-padding-top: 4rem;
+}
+
+::selection {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ---------- Scroll progress (CSS scroll-driven animation, no JS) ---------- */
+.scroll-progress {
+  display: none;
+}
+
+@supports (animation-timeline: scroll()) {
+  .scroll-progress {
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 60;
+    display: block;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-light), #efc603);
+    transform-origin: 0 50%;
+    animation: grow-x linear both;
+    animation-timeline: scroll(root);
+  }
+}
+
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ---------- Hero ---------- */
+.fade-up {
+  animation: fade-up 0.9s var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 120ms + 150ms);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+  }
+}
+
+.zoom-in {
+  animation: zoom-in 1s var(--ease-out) both;
+}
+
+@keyframes zoom-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+}
+
+.ken-burns {
+  animation: ken-burns 24s ease-in-out infinite alternate;
+}
+
+@keyframes ken-burns {
+  to {
+    transform: scale(1.12) translate3d(-1%, -1%, 0);
+  }
+}
+
+.text-gradient {
+  background: linear-gradient(100deg, #fff 20%, #fdba74 50%, #fff 80%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Rotating job titles: one list slides up through a one-line window */
+.rotator {
+  display: inline-block;
+  height: 1.5em;
+  overflow: hidden;
+  vertical-align: bottom;
+  line-height: 1.5em;
+}
+
+.rotator__list {
+  display: block;
+  animation: rotate-words 12s var(--ease-out) infinite;
+}
+
+.rotator__list > span {
+  display: block;
+  height: 1.5em;
+  white-space: nowrap;
+}
+
+/* 4 titles + a clone of the first, so the loop restarts seamlessly */
+@keyframes rotate-words {
+  0%,
+  20% {
+    transform: translateY(0);
+  }
+  25%,
+  45% {
+    transform: translateY(-20%);
+  }
+  50%,
+  70% {
+    transform: translateY(-40%);
+  }
+  75%,
+  95% {
+    transform: translateY(-60%);
+  }
+  100% {
+    transform: translateY(-80%);
+  }
+}
+
+.bounce-soft {
+  animation: bounce-soft 2s ease-in-out infinite;
+}
+
+@keyframes bounce-soft {
+  50% {
+    transform: translate3d(0, 8px, 0);
+  }
+}
+
+/* ---------- Buttons: light sweep on hover ---------- */
+.btn-shine {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition: transform 0.3s var(--ease-out);
+}
+
+.btn-shine::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(120deg, transparent 30%, rgb(255 255 255 / 0.35) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.7s var(--ease-out);
+  content: '';
+}
+
+.btn-shine:hover {
+  transform: translateY(-2px);
+}
+
+.btn-shine:hover::before {
+  transform: translateX(100%);
+}
+
+/* ---------- Nav underline ---------- */
+.nav-link {
+  position: relative;
+}
+
+.nav-link::after {
+  position: absolute;
+  right: 6px;
+  bottom: 0;
+  left: 6px;
+  height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.35s var(--ease-out);
+  content: '';
+}
+
+.nav-link:hover::after,
+.nav-link[aria-current='true']::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* ---------- Scroll reveal ----------
+   Elements are only hidden once JS has added .js-reveal, so the page stays fully visible without JS. */
+.js-reveal [data-reveal]:not([data-reveal='line']) {
+  opacity: 0;
+  transform: translate3d(0, 32px, 0);
+  transition:
+    opacity 0.8s var(--ease-out),
+    transform 0.8s var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 90ms);
+}
+
+.js-reveal [data-reveal='left'] {
+  transform: translate3d(-32px, 0, 0);
+}
+
+.js-reveal [data-reveal='zoom'] {
+  transform: scale(0.92);
+}
+
+.js-reveal [data-reveal][data-revealed]:not([data-reveal='line']) {
+  opacity: 1;
+  transform: none;
+}
+
+/* Heading accent underline draws in */
+.heading-underline {
+  transform-origin: left;
+  transition: transform 0.8s var(--ease-out) 0.3s;
+}
+
+.js-reveal [data-reveal]:not([data-revealed]) .heading-underline {
+  transform: scaleX(0);
+}
+
+/* ---------- Animated counters (CSS @property, no JS) ---------- */
+@property --num {
+  syntax: '<integer>';
+  inherits: false;
+  initial-value: 0;
+}
+
+.stat-num {
+  --num: var(--target);
+  counter-reset: num var(--num);
+  transition: --num 2s var(--ease-out) 0.2s;
+}
+
+.stat-num::after {
+  content: counter(num);
+}
+
+.js-reveal [data-reveal]:not([data-revealed]) .stat-num {
+  --num: 0;
+}
+
+.stat-card {
+  position: relative;
+  transition: transform 0.4s var(--ease-out);
+}
+
+.stat-card::after {
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--accent);
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.4s;
+  pointer-events: none;
+  content: '';
+}
+
+@media (hover: hover) {
+  .stat-card:hover {
+    transform: translateY(-4px);
+  }
+  .stat-card:hover::after {
+    opacity: 1;
+  }
+}
+
+/* ---------- Tech marquee ---------- */
+.marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+
+.marquee__track {
+  display: flex;
+  width: max-content;
+  animation: marquee 45s linear infinite;
+}
+
+/* margin (not gap) keeps both halves identical, so -50% loops without a jump */
+.marquee__track > * {
+  margin-right: 0.75rem;
+}
+
+.marquee:hover .marquee__track {
+  animation-play-state: paused;
+}
+
+@keyframes marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+/* ---------- Skill bars ---------- */
+.skill-bar {
+  height: 100%;
+  overflow: hidden;
+  border-radius: 9999px;
+}
+
+.skill-bar__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #fdba74, var(--accent));
+  transition: transform 1.2s var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 120ms + 200ms);
+}
+
+.js-reveal [data-reveal]:not([data-revealed]) .skill-bar__fill {
+  transform: translateX(-101%);
+}
+
+/* ---------- Timeline ---------- */
+@media (min-width: 768px) {
+  .timeline {
+    position: relative;
+  }
+
+  .timeline::before {
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    left: 7px;
+    width: 2px;
+    background: linear-gradient(var(--accent), #d4d4d4);
+    transform-origin: top;
+    transition: transform 1.6s var(--ease-out);
+    content: '';
+  }
+
+  .js-reveal .timeline:not([data-revealed])::before {
+    transform: scaleY(0);
+  }
+
+  .timeline__item {
+    position: relative;
+    padding-left: 2.5rem;
+  }
+
+  .timeline__item::before,
+  .timeline__item--current::after {
+    position: absolute;
+    top: 0.45rem;
+    left: 0;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    content: '';
+  }
+
+  .timeline__item::before {
+    z-index: 1;
+    border: 3px solid var(--accent);
+    background: #f5f5f5;
+  }
+
+  .timeline__item--current::after {
+    background: var(--accent);
+    opacity: 0.6;
+    animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+}
+
+@keyframes ping {
+  75%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* ---------- Project cards ---------- */
+.project-card {
+  position: relative;
+  border-radius: 0.5rem;
+  transition: transform 0.5s var(--ease-out);
+}
+
+/* Glow lives on a pseudo-element so hover fades opacity instead of repainting box-shadow */
+.project-card::after {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: 0 22px 40px -14px rgb(249 115 22 / 0.55);
+  opacity: 0;
+  transition: opacity 0.5s var(--ease-out);
+  pointer-events: none;
+  content: '';
+}
+
+.project-card img {
+  transition: transform 0.8s var(--ease-out);
+}
+
+.project-overlay__content {
+  transform: translate3d(0, 16px, 0);
+  transition: transform 0.5s var(--ease-out);
+}
+
+.project-overlay.is-open .project-overlay__content {
+  transform: none;
+}
+
+@media (hover: hover) {
+  .project-card:hover {
+    transform: translateY(-6px);
+  }
+  .project-card:hover::after {
+    opacity: 1;
+  }
+  .project-card:hover img {
+    transform: scale(1.08);
+  }
+  .project-card:hover .project-caption {
+    opacity: 0;
+  }
+  .project-card:hover .project-overlay__content {
+    transform: none;
+  }
+}
+
+/* Title caption stays visible until the description overlay takes over */
+.project-caption {
+  transition: opacity 0.3s;
+}
+
+.project-card:has(.is-open) .project-caption {
+  opacity: 0;
+}
+
+/* ---------- Contact links ---------- */
+.contact-link svg {
+  transition: transform 0.3s var(--ease-out);
+}
+
+.contact-link:hover svg {
+  transform: scale(1.2) rotate(-8deg);
+}
+
+/* ---------- Respect reduced-motion preferences ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+
+  .scroll-progress,
+  .marquee__track > [aria-hidden='true'] {
+    display: none;
+  }
+
+  .rotator__list,
+  .marquee__track {
+    animation: none !important;
+  }
+
+  .marquee__track {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: auto;
+    row-gap: 0.75rem;
+  }
+}
