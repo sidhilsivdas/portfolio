@@ -25,7 +25,8 @@ jobs:
           node-version: 24
           cache: npm
 
-      - run: npm ci
+      # npm ci rejects lockfiles generated on Windows (missing Linux-only optional deps)
+      - run: npm install --no-audit --no-fund
 
       - name: Build static site
         run: npm run build
