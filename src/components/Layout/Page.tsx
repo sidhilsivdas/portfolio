@@ -2,6 +2,7 @@ import {NextPage} from 'next';
 import Head from 'next/head';
 import {memo, PropsWithChildren} from 'react';
 
+import {withBasePath} from '../../config';
 import {HomepageMeta} from '../../data/dataDef';
 
 const Page: NextPage<PropsWithChildren<HomepageMeta>> = memo(({children, title, description}) => {
@@ -11,8 +12,8 @@ const Page: NextPage<PropsWithChildren<HomepageMeta>> = memo(({children, title, 
         <title>{title}</title>
         <meta content={description} name="description" />
 
-        <link href="/icon.svg" rel="icon" type="image/svg+xml" />
-        <link href="/site.webmanifest" rel="manifest" />
+        <link href={withBasePath('/icon.svg')} rel="icon" type="image/svg+xml" />
+        <link href={withBasePath('/site.webmanifest')} rel="manifest" />
         <meta content="#171717" name="theme-color" />
 
         {/* Open Graph : https://ogp.me/ */}

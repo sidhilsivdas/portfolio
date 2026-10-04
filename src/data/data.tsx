@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 import LinkedInIcon from '../components/Icon/LinkedInIcon';
+import {withBasePath} from '../config';
 import heroImage from '../images/header-background.webp';
 import porfolioImage1 from '../images/portfolio/portfolio-1.jpg';
 import porfolioImage2 from '../images/portfolio/portfolio-2.jpg';
@@ -85,7 +86,7 @@ export const heroData: Hero = {
   ),
   actions: [
     {
-      href: '/assets/resume.pdf',
+      href: withBasePath('/assets/resume.pdf'),
       text: 'Resume',
       primary: true,
       Icon: ArrowDownTrayIcon,

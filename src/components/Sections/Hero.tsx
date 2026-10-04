@@ -68,7 +68,7 @@ const Hero: FC = memo(() => {
           <a
             aria-label="Scroll to about section"
             className="bounce-soft rounded-full bg-white p-1 ring-white ring-offset-2 ring-offset-gray-700/80 focus:outline-none focus:ring-2 sm:p-2"
-            href={`/#${SectionId.About}`}>
+            href={`#${SectionId.About}`}>
             <ChevronDownIcon className="h-5 w-5 bg-transparent sm:h-6 sm:w-6" />
           </a>
         </div>

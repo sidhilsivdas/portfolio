@@ -1,7 +1,13 @@
 /* eslint-env node */
 
+// Set by the GitHub Pages workflow, e.g. "/portfolio". Empty for local dev and Vercel.
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+const isStaticExport = process.env.STATIC_EXPORT === 'true';
+
 // https://github.com/vercel/next.js/blob/master/packages/next/next-server/server/config.ts
 const nextConfig = {
+  ...(isStaticExport && {output: 'export'}),
+  basePath,
   webpack: config => {
     const oneOfRule = config.module.rules.find(rule => rule.oneOf);
 
@@ -24,6 +30,8 @@ const nextConfig = {
   swcMinify: true,
   trailingSlash: false,
   images: {
+    // Static hosting has no image optimization server
+    unoptimized: isStaticExport,
     remotePatterns: [
       {
         protocol: 'https',
